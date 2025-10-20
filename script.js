@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://127.0.0.1:5000/api';
+const API_BASE_URL = 'https://eight32302225-backend.onrender.com/api';
 
 // 获取页面元素
 const contactsList = document.getElementById('contacts-list');
