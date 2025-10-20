@@ -54,6 +54,30 @@ function fetchAndRenderContacts() {
     .catch(error => console.error('获取联系人失败:', error));
 }
 
+// --- 【核心函数2】删除联系人 ---
+function deleteContact(id) {
+  // 增加一个确认弹窗，防止误删
+  if (!confirm('您确定要删除这位联系人吗？')) {
+    return; // 如果用户点击“取消”，则什么也不做
+  }
+
+  fetch(`${API_BASE_URL}/contacts/${id}`, {
+    method: 'DELETE'
+  })
+    .then(response => {
+      if (response.ok) {
+        // 删除成功后，再次刷新列表
+        fetchAndRenderContacts();
+      } else {
+        console.error('删除失败');
+        alert('删除失败，请稍后再试。'); // 给用户一个友好的失败提示
+      }
+    })
+    .catch(error => {
+      console.error('请求出错:', error);
+      alert('请求出错，请检查网络或联系管理员。');
+    });
+}
 
 // --- 【新增函数3】显示并填充修改表单 ---
 function showEditForm(contact) {
