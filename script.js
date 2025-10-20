@@ -1,7 +1,7 @@
 const API_BASE_URL = 'https://eight32302225-backend.onrender.com/api';
 
 // 获取页面元素
-const contactsList = document.getElementById('contacts-list');
+const contactsTbody = document.getElementById('contacts-tbody');
 const addContactForm = document.getElementById('add-contact-form');
 const nameInput = document.getElementById('name-input');
 const phoneInput = document.getElementById('phone-input');
@@ -13,55 +13,59 @@ const editIdInput = document.getElementById('edit-id-input');
 const editNameInput = document.getElementById('edit-name-input');
 const editPhoneInput = document.getElementById('edit-phone-input');
 
-// --- 【核心函数1】获取并渲染所有联系人 ---
+//--- 【核心函数1】获取并渲染所有联系人 ---
 function fetchAndRenderContacts() {
   fetch(`${API_BASE_URL}/contacts`)
     .then(response => response.json())
     .then(contacts => {
-      contactsList.innerHTML = '';
-      contacts.forEach(contact => {
-        const li = document.createElement('li');
-        li.textContent = `姓名: ${contact.name}, 电话: ${contact.phone}`;
+      // 清空表格内容
+      contactsTbody.innerHTML = '';
 
-        // --- 新增：修改按钮 ---
+      contacts.forEach(contact => {
+        // 创建一个新的表格行 <tr>
+        const row = contactsTbody.insertRow();
+
+        // 创建单元格 <td> 并填充内容
+        const nameCell = row.insertCell();
+        nameCell.textContent = contact.name;
+
+        const phoneCell = row.insertCell();
+        phoneCell.textContent = contact.phone;
+
+        const actionsCell = row.insertCell();
+
+        // 创建修改按钮
         const editButton = document.createElement('button');
         editButton.textContent = '修改';
-        editButton.onclick = () => showEditForm(contact); // 点击时调用显示函数
-        li.appendChild(editButton);
+        editButton.className = 'outline'; // Pico.css 的次要按钮样式
+        editButton.onclick = () => showEditForm(contact);
 
-        // 删除按钮
+        // 创建删除按钮
         const deleteButton = document.createElement('button');
         deleteButton.textContent = '删除';
+        deleteButton.className = 'secondary'; // Pico.css 的警告/删除按钮样式
         deleteButton.onclick = () => deleteContact(contact.id);
-        li.appendChild(deleteButton);
 
-        contactsList.appendChild(li);
+        // 把按钮放进操作单元格
+        actionsCell.appendChild(editButton);
+        actionsCell.appendChild(deleteButton);
       });
     })
     .catch(error => console.error('获取联系人失败:', error));
 }
 
-// --- 【核心函数2】删除联系人 ---
-function deleteContact(id) {
-  fetch(`${API_BASE_URL}/contacts/${id}`, { method: 'DELETE' })
-    .then(response => {
-      if (response.ok) fetchAndRenderContacts();
-      else console.error('删除失败');
-    })
-    .catch(error => console.error('请求出错:', error));
-}
 
 // --- 【新增函数3】显示并填充修改表单 ---
 function showEditForm(contact) {
   editIdInput.value = contact.id;
   editNameInput.value = contact.name;
   editPhoneInput.value = contact.phone;
-  editModal.style.display = 'block';
+  editModal.showModal(); // 这是 <dialog> 元素的标准显示方法
 }
 
 // --- 【新增函数4】隐藏修改表单 ---
 function hideEditForm() {
-  editModal.style.display = 'none';
+  editModal.close(); // 这是 <dialog> 元素的标准关闭方法
 }
 
 // --- 【监听器1】监听“添加”表单的提交 ---
