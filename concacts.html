@@ -21,6 +21,17 @@
       align-items: center; /* 3. 垂直居中对齐（让文字和按钮在一条线上）*/
       margin-top: 2rem; /* 4. 增加和上方联系人列表的间距 */
     }
+    /* 1. 精确控制“上一页”和“下一页”按钮的宽度 */
+    #pagination-controls button {
+      width: 120px; /* 给按钮一个固定的宽度，比如 120px */
+      flex-shrink: 0; /* 防止按钮在空间不足时被压缩变形 */
+    }
+
+    /* 2. 确保中间的页码文本不会换行 */
+    #pagination-controls #page-info {
+      white-space: nowrap; /* 强制文本在一行内显示 */
+      margin: 0 1rem; /* 给文本左右增加一点边距，让它不紧贴按钮 */
+    }
   </style>
 </head>
 
