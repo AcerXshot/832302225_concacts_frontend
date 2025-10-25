@@ -1,12 +1,29 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>我的通讯录</title>
-
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+
+  <style>
+
+    article > header, h2 {
+      text-align: center;
+      margin-bottom: 1.5rem; /* 增加标题和下方内容的间距 */
+    }
+
+
+    #pagination-controls {
+      display: flex; /* 1. 启用 Flexbox 布局 */
+      justify-content: space-between; /* 2. 两端对齐，项目之间的间隔都相等 */
+      align-items: center; /* 3. 垂直居中对齐（让文字和按钮在一条线上）*/
+      margin-top: 2rem; /* 4. 增加和上方联系人列表的间距 */
+    }
+  </style>
 </head>
+
 <body>
 
 <main class="container">
@@ -32,22 +49,19 @@
     </form>
   </article>
 
-  <div class="grid">
-    <div>
-      <label for="search-input">搜索联系人</label>
-      <input type="search" id="search-input" name="search" placeholder="按姓名或电话搜索...">
-    </div>
-    <div>
-      <div id="pagination-controls" style="text-align: right;">
-        <button id="prev-page" class="outline">上一页</button>
-        <span id="page-info">第 1 / 1 页</span>
-        <button id="next-page" class="outline">下一页</button>
-      </div>
-    </div>
+  <div>
+    <label for="search-input">搜索联系人</label>
+    <input type="search" id="search-input" name="search" placeholder="按姓名或电话搜索...">
   </div>
 
   <h2>联系人列表</h2>
   <div id="contacts-list">
+  </div>
+
+  <div id="pagination-controls">
+    <button id="prev-page" class="outline">上一页</button>
+    <span id="page-info">第 1 / 1 页</span>
+    <button id="next-page" class="outline">下一页</button>
   </div>
 
   <dialog id="edit-modal">
