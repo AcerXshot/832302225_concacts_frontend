@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
-
+<html lang="zh-CN" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,66 +7,113 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
 
   <style>
-
-    article > header, h2 {
-      text-align: center;
-      margin-bottom: 1.5rem; /* 增加标题和下方内容的间距 */
+    :root { --pico-background-color: #11191f; }
+    .app-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; }
+    .icon-btn {
+      background: transparent !important; border: none !important;
+      padding: 0.5rem !important; margin: 0 !important;
+      width: 44px; height: 44px;
+      color: var(--pico-primary);
     }
-
-
+    .icon-btn svg { width: 24px; height: 24px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .icon-btn.danger { color: var(--pico-form-invalid-border-color); }
+    .list-group-header {
+      font-size: 1.25rem; font-weight: bold; color: var(--pico-primary);
+      background-color: #192229; padding: 0.5rem 1rem;
+      margin-top: 1rem; border-radius: var(--pico-border-radius);
+    }
+    .contact-item {
+      font-size: 1.1rem; padding: 1rem;
+      border-bottom: 1px solid var(--pico-muted-border-color);
+      cursor: pointer; transition: background-color 0.2s ease;
+    }
+    .contact-item:hover { background-color: #192229; }
     #pagination-controls {
-      display: flex; /* 1. 启用 Flexbox 布局 */
-      justify-content: space-between; /* 2. 两端对齐，项目之间的间隔都相等 */
-      align-items: center; /* 3. 垂直居中对齐（让文字和按钮在一条线上）*/
-      margin-top: 2rem; /* 4. 增加和上方联系人列表的间距 */
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 2rem;
     }
-    /* 1. 精确控制“上一页”和“下一页”按钮的宽度 */
     #pagination-controls button {
-      width: 120px; /* 给按钮一个固定的宽度，比如 120px */
-      flex-shrink: 0; /* 防止按钮在空间不足时被压缩变形 */
+      width: 120px; flex-shrink: 0;
     }
-
-    /* 2. 确保中间的页码文本不会换行 */
     #pagination-controls #page-info {
-      white-space: nowrap; /* 强制文本在一行内显示 */
-      margin: 0 1rem; /* 给文本左右增加一点边距，让它不紧贴按钮 */
+      white-space: nowrap; margin: 0 1rem;
+    }
+    #detail-modal article { padding: 1.5rem; }
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 100px 1fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+    .detail-avatar {
+      width: 100px; height: 100px;
+      background-color: #334e68;
+      border-radius: 50%;
+      display: flex; justify-content: center; align-items: center;
+    }
+    .detail-avatar svg { width: 60px; height: 60px; stroke: #fff; }
+    .detail-name {
+      font-size: 1.5rem; font-weight: bold; text-align: center; margin-top: 0.5rem;
+    }
+    .detail-info { display: flex; flex-direction: column; gap: 1rem; }
+    .detail-info p { margin: 0; }
+    .detail-info strong { color: var(--pico-muted-color); margin-right: 0.5rem; }
+    #detail-modal footer {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--pico-muted-border-color);
+    }
+    #detail-modal footer button {
+      font-size: 1rem;
+      width: 100%; height: auto;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+    }
+    #detail-modal footer button svg { margin-bottom: 0.25rem; }
+
+    /* 用于隐藏 Label 的样式 */
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
     }
   </style>
 </head>
+<body style="padding-bottom: 5rem;">
 
-<body>
+<!-- SVG 图标定义 -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="icon-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></symbol>
+  <symbol id="icon-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></symbol>
+  <symbol id="icon-edit" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></symbol>
+  <symbol id="icon-trash" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></symbol>
+</svg>
 
 <main class="container">
 
-  <header>
-    <h1 style="text-align: center;">我的通讯录</h1>
+  <header class="app-header">
+    <h2>通讯录</h2>
+    <button class="icon-btn" onclick="showAddModal()">
+      <svg><use href="#icon-plus"></use></svg>
+    </button>
   </header>
 
-  <article>
-    <header><strong>添加新联系人</strong></header>
-    <form id="add-contact-form">
-      <div class="grid">
-        <div>
-          <label for="name-input">姓名</label>
-          <input type="text" id="name-input" name="name" placeholder="请输入姓名" required>
-        </div>
-        <div>
-          <label for="phone-input">电话</label>
-          <input type="tel" id="phone-input" name="phone" placeholder="请输入电话" required>
-        </div>
-      </div>
-      <button type="submit">添加</button>
-    </form>
-  </article>
-
   <div>
-    <label for="search-input">搜索联系人</label>
-    <input type="search" id="search-input" name="search" placeholder="按姓名或电话搜索...">
+    <label for="search-input" class="visually-hidden">搜索联系人</label>
+    <input type="search" id="search-input" name="search" placeholder="搜索...">
   </div>
 
-  <h2>联系人列表</h2>
-  <div id="contacts-list">
-  </div>
+  <div id="contacts-list" style="margin-top: 2rem;"></div>
 
   <div id="pagination-controls">
     <button id="prev-page" class="outline">上一页</button>
@@ -75,10 +121,62 @@
     <button id="next-page" class="outline">下一页</button>
   </div>
 
+  <!-- 详情模态框 -->
+  <dialog id="detail-modal">
+    <article>
+      <header>
+        <button aria-label="Close" class="close" onclick="hideDetailModal()"></button>
+      </header>
+      <div class="detail-grid">
+        <div>
+          <div class="detail-avatar">
+            <svg><use href="#icon-user"></use></svg>
+          </div>
+          <h3 class="detail-name" id="detail-name"></h3>
+        </div>
+        <div class="detail-info">
+          <p><strong>电话:</strong> <span id="detail-phone"></span></p>
+          <p><strong>邮箱:</strong> <span id="detail-email"></span></p>
+        </div>
+      </div>
+      <footer>
+        <button class="icon-btn" id="detail-edit-btn">
+          <svg><use href="#icon-edit"></use></svg>
+          <span>修改</span>
+        </button>
+        <button class="icon-btn danger" id="detail-delete-btn">
+          <svg><use href="#icon-trash"></use></svg>
+          <span>删除</span>
+        </button>
+      </footer>
+    </article>
+  </dialog>
+
+  <!-- ======================================================= -->
+  <!-- 错误修复：这里是完整的“添加”模态框代码 -->
+  <dialog id="add-modal">
+    <article>
+      <header>
+        <button aria-label="Close" class="close" onclick="hideAddModal()"></button>
+        <strong>添加新联系人</strong>
+      </header>
+      <form id="add-contact-form">
+        <label for="name-input">姓名</label>
+        <input type="text" id="name-input" name="name" required>
+        <label for="phone-input">电话</label>
+        <input type="tel" id="phone-input" name="phone" required>
+        <label for="email-input">邮箱</label>
+        <input type="email" id="email-input" name="email">
+        <button type="submit">添加</button>
+      </form>
+    </article>
+  </dialog>
+
+  <!-- 错误修复：这里是完整的“修改”模态框代码 -->
   <dialog id="edit-modal">
     <article>
       <header>
-        <button href="#close" aria-label="Close" class="close" onclick="hideEditForm()"></button>
+        <button aria-label="Close" class="close" onclick="hideEditForm()"></button>
         <strong>修改联系人</strong>
       </header>
       <form id="edit-contact-form">
@@ -87,6 +185,8 @@
         <input type="text" id="edit-name-input" required>
         <label for="edit-phone-input">电话</label>
         <input type="tel" id="edit-phone-input" required>
+        <label for="edit-email-input">邮箱</label>
+        <input type="email" id="edit-email-input" name="email">
         <footer>
           <button type="button" class="secondary" onclick="hideEditForm()">取消</button>
           <button type="submit">保存更改</button>
@@ -94,11 +194,13 @@
       </form>
     </article>
   </dialog>
+  <!-- ======================================================= -->
 
 </main>
 
 <script src="https://unpkg.com/pinyin-pro"></script>
-
 <script src="script.js"></script>
+
 </body>
 </html>
+
