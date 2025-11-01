@@ -1,6 +1,6 @@
 // --- 全局变量和常量 ---
 const API_BASE_URL = 'https://eight32302225-backend.onrender.com/api';
-const CONTACTS_PER_PAGE = 15; // 每页显示的联系人数量
+const CONTACTS_PER_PAGE = 6; // 每页显示的联系人数量
 
 let allContacts = []; // 用于缓存从后端获取的所有联系人，避免重复请求
 let currentPage = 1; // 当前页码
