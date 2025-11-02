@@ -1,27 +1,35 @@
-# Contacts Application (Frontend)
+# Contacts App (Frontend)
 
-This is the first assignment for the Software Engineering course at Fuzhou University, focusing on building a contacts application with a separated frontend and backend architecture.
+This is the frontend interface for the full-stack contacts application, built for the first software engineering assignment.
 
-This repository contains the **frontend** part of the project.
+This repository contains the **frontend** part of the project, built with vanilla JavaScript, HTML5, and Pico.css.
 
-**Live Application URL:** [https://832302225-concacts-frontend.vercel.app/](https://832302225-concacts-frontend.vercel.app/)
+### Project Links
 
-## Project Description
+* **Live App URL (Vercel):** <https://832302225-concacts-frontend.vercel.app/>
+* **Live API URL (Render):** <https://eight32302225-backend.onrender.com/>
+* **Backend Repository (GitHub):** <https://github.com/XcerShot/832302225_concacts_backend>
 
-This is a simple and clean single-page application built with vanilla HTML, CSS, and JavaScript. It consumes the backend API to display and manage contact information, with a modern UI powered by Pico.css.
+### Features
 
-**Backend Repository:** [Click Here](https://github.com/AcerXshot/832302225_concacts_backend)
+* **Modern UI:** Built with **Pico.css** for a clean, responsive, and classless design.
+* **Dark Mode:** The UI is set to a sleek dark theme, similar to modern mobile apps.
+* **"List-Detail" Interface:** An app-like interaction model where clicking a name opens a detailed modal with an avatar and more information.
+* **Advanced Sorting:** Automatically sorts contacts by pinyin (using `pinyin-pro`), with correct alphabetical grouping for Chinese characters.
+* **Real-time Search:** Instantly filters the contact list by `name`, `phone`, or `email` as the user types.
+* **Pagination:** The contact list is paginated, with clean and functional "Previous" / "Next" controls.
+* **Icon-based UI:** Uses SVG icons for a clean, app-like feel in all modals and buttons.
 
-## Tech Stack
+### Tech Stack
 
-* HTML5
-* **CSS Framework:** Pico.css
-* JavaScript (ES6+)
-  * Using the `fetch` API for asynchronous communication.
+* **HTML5:** For structured and semantic content.
+* **CSS3 (Pico.css):** For modern styling and layout.
+* **JavaScript (ES6+):** For all application logic, API communication (`fetch`), and dynamic DOM manipulation.
+* **`pinyin-pro`:** A library used to handle complex Chinese character sorting and grouping.
 
-## How to Run Locally
+### How to Run Locally
 
-1.  Clone this repository to your local machine.
-2.  Simply open the `index.html` file in your preferred web browser.
-
-**Note:** The local version is configured to communicate with the **live backend API** on Render, so an internet connection is required.
+1.  Clone this repository.
+2.  Ensure the backend server is running (either locally at `http://127.0.0.1:5000` or the live version).
+3.  If running with a local backend, update the `API_BASE_URL` constant in `script.js`.
+4.  Open the `contacts.html` file in any modern web browser.
