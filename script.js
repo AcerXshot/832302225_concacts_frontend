@@ -1,6 +1,6 @@
-//* global pinyinPro */ // 告诉 IDE pinyinPro 是全局变量
+//* global pinyinPro */ //
 
-// --- 全局变量 ---
+
 const API_BASE_URL = 'https://eight32302225-backend.onrender.com/api';
 const CONTACTS_PER_PAGE = 6;
 let allContacts = [];
@@ -37,11 +37,8 @@ const detailEmail = document.getElementById('detail-email'); // (新增)
 const detailEditBtn = document.getElementById('detail-edit-btn');
 const detailDeleteBtn = document.getElementById('detail-delete-btn');
 
-// =================================================================
-// --- 核心渲染流程 ---
-// =================================================================
 
-// 1. 主函数：获取数据并触发渲染
+
 async function fetchDataAndRender() {
   try {
     const response = await fetch(`${API_BASE_URL}/contacts`);
@@ -55,7 +52,7 @@ async function fetchDataAndRender() {
   }
 }
 
-// 2. 渲染函数：过滤、排序、分页、分组、渲染
+
 function renderPage() {
   const searchTerm = searchInput.value.toLowerCase();
   const filteredContacts = allContacts.filter(contact =>
@@ -77,11 +74,9 @@ function renderPage() {
   updatePaginationControls(filteredContacts.length);
 }
 
-// =================================================================
-// --- 辅助函数 ---
-// =================================================================
 
-// 分组 (保持不变)
+
+// 分组
 function groupContacts(contacts) {
   if (contacts.length === 0) return {};
   const groups = {};
@@ -94,7 +89,7 @@ function groupContacts(contacts) {
   return groups;
 }
 
-// 渲染分组 (保持不变)
+// 渲染分组
 function renderGroupedContacts(groupedContacts) {
   contactsListDiv.innerHTML = '';
   const groupKeys = Object.keys(groupedContacts).sort((a, b) => {
@@ -124,7 +119,7 @@ function renderGroupedContacts(groupedContacts) {
   });
 }
 
-// 更新分页 (保持不变)
+// 更新分页
 function updatePaginationControls(totalItems) {
   const totalPages = Math.ceil(totalItems / CONTACTS_PER_PAGE) || 1;
   pageInfo.textContent = `第 ${currentPage} / ${totalPages} 页`;
@@ -132,20 +127,18 @@ function updatePaginationControls(totalItems) {
   nextPageBtn.disabled = currentPage >= totalPages;
 }
 
-// 2. (已修改) 更新搜索框占位符
+// 2. 更新搜索框占位符
 function updateSearchPlaceholder() {
   searchInput.placeholder = `在 ${allContacts.length} 位联系人中搜索...`;
 }
 
-// =================================================================
-// --- 模态框控制 ---
-// =================================================================
+
 
 // 添加模态框
 function showAddModal() { addModal.showModal(); }
 function hideAddModal() { addModal.close(); }
 
-// 修改模态框 (已更新, 增加 email)
+// 修改模态框
 function showEditForm(contact) {
   selectedContact = contact;
   editIdInput.value = contact.id;
@@ -156,7 +149,7 @@ function showEditForm(contact) {
 }
 function hideEditForm() { editModal.close(); }
 
-// 详情模态框 (已更新, 增加 email)
+// 详情模态框
 function showDetailModal(contact) {
   selectedContact = contact;
   detailName.textContent = contact.name;
@@ -166,9 +159,7 @@ function showDetailModal(contact) {
 }
 function hideDetailModal() { detailModal.close(); }
 
-// =================================================================
-// --- 事件监听器 ---
-// =================================================================
+
 
 document.addEventListener('DOMContentLoaded', fetchDataAndRender);
 searchInput.addEventListener('input', () => {
@@ -189,7 +180,6 @@ contactsListDiv.addEventListener('click', (event) => {
   const target = event.target;
   if (target.classList.contains('contact-item')) {
     const contactId = target.dataset.id;
-    // 修复了之前版本中的一个小 bug，使用 Number() 来确保类型匹配
     const contact = allContacts.find(c => c.id === Number(contactId));
     if (contact) { showDetailModal(contact); }
   }
@@ -205,7 +195,7 @@ detailDeleteBtn.addEventListener('click', () => {
   deleteContact(selectedContact.id);
 });
 
-// 添加表单提交 (已更新, 增加 email)
+// 添加表单提交
 addContactForm.addEventListener('submit', event => {
   event.preventDefault();
   fetch(`${API_BASE_URL}/contacts`, {
@@ -225,7 +215,7 @@ addContactForm.addEventListener('submit', event => {
   });
 });
 
-// 修改表单提交 (已更新, 增加 email)
+// 修改表单提交
 editContactForm.addEventListener('submit', event => {
   event.preventDefault();
   const id = editIdInput.value;
@@ -246,7 +236,7 @@ editContactForm.addEventListener('submit', event => {
   });
 });
 
-// 删除函数 (保持不变)
+// 删除函数
 function deleteContact(id) {
   if (!confirm(`您确定要删除 ${selectedContact.name} 吗？`)) return;
   fetch(`${API_BASE_URL}/contacts/${id}`, { method: 'DELETE' })
