@@ -8,7 +8,7 @@ This repository contains the **frontend** part of the project, built with vanill
 
 * **Live App URL (Vercel):** <https://832302225-concacts-frontend.vercel.app/>
 * **Live API URL (Render):** <https://eight32302225-backend.onrender.com/>
-* **Backend Repository (GitHub):** <https://github.com/XcerShot/832302225_concacts_backend>
+* **Backend Repository (GitHub):** <https://github.com/AcerXshot/832302225_concacts_backend>
 
 ### Features
 
