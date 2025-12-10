@@ -6,6 +6,7 @@ const CONTACTS_PER_PAGE = 8;
 let allContacts = [];
 let currentPage = 1;
 let selectedContact = null;
+let showFavoritesOnly = false;
 
 // --- 1. 获取与渲染 ---
 
@@ -26,24 +27,33 @@ async function fetchDataAndRender() {
 function renderPage() {
   const searchTerm = document.getElementById('search-input').value.toLowerCase();
 
-  // 过滤逻辑：搜索姓名或任意联系方式的值
+  // 过滤逻辑更新：同时考虑搜索词 + 收藏状态
   const filteredContacts = allContacts.filter(contact => {
+    // 1. 搜索匹配
     const nameMatch = contact.name.toLowerCase().includes(searchTerm);
-    // 在 details 数组中查找是否有匹配项
     const detailsMatch = contact.details && contact.details.some(d => d.value.toLowerCase().includes(searchTerm));
-    return nameMatch || detailsMatch;
+    const isMatch = nameMatch || detailsMatch;
+
+    // 2. 收藏匹配 (如果 showFavoritesOnly 为 true，则必须是 is_favorite=1)
+    if (showFavoritesOnly && !contact.is_favorite) {
+      return false;
+    }
+
+    return isMatch;
   });
 
-  // 排序逻辑：收藏者优先 (is_favorite=1)，其次按拼音
+  // 排序逻辑保持不变...
   filteredContacts.sort((a, b) => {
+    // ... (保持原有的排序代码)
     if (a.is_favorite !== b.is_favorite) {
-      return b.is_favorite - a.is_favorite; // 1 在前，0 在后
+      return b.is_favorite - a.is_favorite;
     }
     return pinyinPro.pinyin(a.name, { toneType: 'none' }).localeCompare(pinyinPro.pinyin(b.name, { toneType: 'none' }));
   });
 
-  // 分页
+  // 分页渲染保持不变...
   const startIndex = (currentPage - 1) * CONTACTS_PER_PAGE;
+  // ... (后面代码不用动)
   const paginatedContacts = filteredContacts.slice(startIndex, startIndex + CONTACTS_PER_PAGE);
 
   renderGroupedContacts(groupContacts(paginatedContacts));
@@ -319,5 +329,25 @@ document.getElementById('prev-page').addEventListener('click', () => {
 document.getElementById('next-page').addEventListener('click', () => {
   const totalPages = Math.ceil(allContacts.length / CONTACTS_PER_PAGE);
   if (currentPage < totalPages) { currentPage++; renderPage(); }
+});
+
+document.getElementById('toggle-fav-btn').addEventListener('click', function() {
+  showFavoritesOnly = !showFavoritesOnly; // 切换状态
+  currentPage = 1; // 重置到第一页
+
+  // 切换按钮样式（激活时变成实心，非激活是轮廓）
+  if (showFavoritesOnly) {
+    this.classList.remove('outline'); // 变实心
+    this.style.backgroundColor = '#f6ad55';
+    this.style.borderColor = '#f6ad55';
+    this.style.color = '#fff';
+  } else {
+    this.classList.add('outline'); // 变回轮廓
+    this.style.backgroundColor = '';
+    this.style.borderColor = '';
+    this.style.color = '';
+  }
+
+  renderPage(); // 重新渲染列表
 });
 

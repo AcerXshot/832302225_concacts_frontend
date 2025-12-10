@@ -85,7 +85,13 @@
   </header>
 
   <div>
-    <input type="search" id="search-input" name="search" placeholder="搜索联系人...">
+    <div style="display: flex; gap: 0.5rem; align-items: center;">
+    <input type="search" id="search-input" name="search" placeholder="搜索联系人..." style="margin-bottom: 0;">
+
+    <button id="toggle-fav-btn" class="outline" data-tooltip="只看收藏" style="width: auto; padding: 0.7rem;">
+      <svg style="pointer-events: none;"><use href="#icon-star"></use></svg>
+    </button>
+  </div>
   </div>
 
   <div id="contacts-list" style="margin-top: 1rem;"></div>
