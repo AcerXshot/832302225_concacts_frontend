@@ -1,90 +1,53 @@
-<!DOCTYPE html>
+<<DOCTYPE html>
 <html lang="zh-CN" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>我的通讯录</title>
+  <title>极限编程通讯录</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
 
   <style>
     :root { --pico-background-color: #11191f; }
-    .app-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; }
+    /* 布局调整 */
+    .app-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; gap: 1rem;}
+    .header-actions { display: flex; gap: 0.5rem; }
+
+    /* 图标按钮样式 */
     .icon-btn {
       background: transparent !important; border: none !important;
       padding: 0.5rem !important; margin: 0 !important;
       width: 44px; height: 44px;
       color: var(--pico-primary);
+      cursor: pointer;
     }
     .icon-btn svg { width: 24px; height: 24px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
-    .icon-btn.danger { color: var(--pico-form-invalid-border-color); }
-    .list-group-header {
-      font-size: 1.25rem; font-weight: bold; color: var(--pico-primary);
-      background-color: #192229; padding: 0.5rem 1rem;
-      margin-top: 1rem; border-radius: var(--pico-border-radius);
-    }
+
+    /* 收藏星星样式 */
+    .star-btn { color: #555; transition: color 0.2s; z-index: 10; }
+    .star-btn.active { color: #f6ad55; fill: #f6ad55; } /* 金色实心 */
+    .star-btn:hover { transform: scale(1.1); }
+
+    /* 列表项样式 */
     .contact-item {
+      display: flex; justify-content: space-between; align-items: center;
       font-size: 1.1rem; padding: 1rem;
       border-bottom: 1px solid var(--pico-muted-border-color);
       cursor: pointer; transition: background-color 0.2s ease;
     }
     .contact-item:hover { background-color: #192229; }
-    #pagination-controls {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 2rem;
-    }
-    #pagination-controls button {
-      width: 120px; flex-shrink: 0;
-    }
-    #pagination-controls #page-info {
-      white-space: nowrap; margin: 0 1rem;
-    }
-    #detail-modal article { padding: 1.5rem; }
-    .detail-grid {
-      display: grid;
-      grid-template-columns: 100px 1fr;
-      gap: 1.5rem;
-      align-items: start;
-    }
-    .detail-avatar {
-      width: 100px; height: 100px;
-      background-color: #334e68;
-      border-radius: 50%;
-      display: flex; justify-content: center; align-items: center;
-    }
-    .detail-avatar svg { width: 60px; height: 60px; stroke: #fff; }
-    .detail-name {
-      font-size: 1.5rem; font-weight: bold; text-align: center; margin-top: 0.5rem;
-    }
-    .detail-info { display: flex; flex-direction: column; gap: 1rem; }
-    .detail-info p { margin: 0; }
-    .detail-info strong { color: var(--pico-muted-color); margin-right: 0.5rem; }
-    #detail-modal footer {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-      margin-top: 1.5rem;
-      padding-top: 1.5rem;
-      border-top: 1px solid var(--pico-muted-border-color);
-    }
-    #detail-modal footer button {
-      font-size: 1rem;
-      width: 100%; height: auto;
-      display: flex; flex-direction: column; justify-content: center; align-items: center;
-    }
-    #detail-modal footer button svg { margin-bottom: 0.25rem; }
+    .contact-info { flex-grow: 1; }
 
-    .visually-hidden {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
+    /* 动态表单行样式 */
+    .detail-row { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; align-items: center; }
+    .detail-row select { width: 100px; margin-bottom: 0; }
+    .detail-row input { margin-bottom: 0; flex-grow: 1; }
+    .detail-row .remove-btn { width: auto; padding: 0.2rem 0.5rem; background: var(--pico-form-invalid-border-color); border: none; font-size: 0.8rem; }
+
+    /* 分组标题 */
+    .list-group-header {
+      font-size: 1rem; font-weight: bold; color: var(--pico-primary);
+      background-color: #192229; padding: 0.25rem 1rem;
+      margin-top: 0.5rem; border-radius: 4px;
     }
   </style>
 </head>
@@ -92,30 +55,44 @@
 
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
   <symbol id="icon-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></symbol>
+  <symbol id="icon-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></symbol>
+  <symbol id="icon-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></symbol>
+  <symbol id="icon-star" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></symbol>
   <symbol id="icon-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></symbol>
-  <symbol id="icon-edit" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></symbol>
-  <symbol id="icon-trash" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></symbol>
+  <symbol id="icon-trash" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></symbol>
 </svg>
 
 <main class="container">
 
   <header class="app-header">
-    <h2>通讯录</h2>
-    <button class="icon-btn" onclick="showAddModal()">
-      <svg><use href="#icon-plus"></use></svg>
-    </button>
+    <hgroup>
+      <h2>通讯录</h2>
+      <small>Extreme Programming Project</small>
+    </hgroup>
+    <div class="header-actions">
+      <input type="file" id="import-file-input" accept=".xlsx, .xls" style="display: none;">
+
+      <button class="outline" onclick="document.getElementById('import-file-input').click()" data-tooltip="导入 Excel">
+        导入
+      </button>
+      <button class="outline" onclick="exportContacts()" data-tooltip="导出 Excel">
+        导出
+      </button>
+      <button class="icon-btn" onclick="showAddModal()" style="background: var(--pico-primary) !important; color: white; border-radius: 50%;">
+        <svg><use href="#icon-plus"></use></svg>
+      </button>
+    </div>
   </header>
 
   <div>
-    <label for="search-input" class="visually-hidden">搜索联系人</label>
-    <input type="search" id="search-input" name="search" placeholder="搜索...">
+    <input type="search" id="search-input" name="search" placeholder="搜索联系人...">
   </div>
 
-  <div id="contacts-list" style="margin-top: 2rem;"></div>
+  <div id="contacts-list" style="margin-top: 1rem;"></div>
 
-  <div id="pagination-controls">
+  <div id="pagination-controls" style="display: flex; justify-content: space-between; margin-top: 2rem;">
     <button id="prev-page" class="outline">上一页</button>
-    <span id="page-info">第 1 / 1 页</span>
+    <span id="page-info" style="line-height: 3;">第 1 / 1 页</span>
     <button id="next-page" class="outline">下一页</button>
   </div>
 
@@ -123,28 +100,17 @@
     <article>
       <header>
         <button aria-label="Close" class="close" onclick="hideDetailModal()"></button>
+        <strong id="detail-name-header">联系人详情</strong>
       </header>
-      <div class="detail-grid">
-        <div>
-          <div class="detail-avatar">
-            <svg><use href="#icon-user"></use></svg>
-          </div>
-          <h3 class="detail-name" id="detail-name"></h3>
-        </div>
-        <div class="detail-info">
-          <p><strong>电话:</strong> <span id="detail-phone"></span></p>
-          <p><strong>邮箱:</strong> <span id="detail-email"></span></p>
-        </div>
+      <div style="text-align: center; margin-bottom: 1rem;">
+        <svg style="width: 60px; height: 60px; background: #333; padding: 10px; border-radius: 50%;"><use href="#icon-user"></use></svg>
+        <h3 id="detail-name"></h3>
       </div>
+      <div id="detail-content" style="margin-bottom: 2rem;"></div>
+
       <footer>
-        <button class="icon-btn" id="detail-edit-btn">
-          <svg><use href="#icon-edit"></use></svg>
-          <span>修改</span>
-        </button>
-        <button class="icon-btn danger" id="detail-delete-btn">
-          <svg><use href="#icon-trash"></use></svg>
-          <span>删除</span>
-        </button>
+        <button class="outline" id="detail-edit-btn">修改</button>
+        <button class="outline contrast" id="detail-delete-btn">删除</button>
       </footer>
     </article>
   </dialog>
@@ -156,13 +122,14 @@
         <strong>添加新联系人</strong>
       </header>
       <form id="add-contact-form">
-        <label for="name-input">姓名</label>
-        <input type="text" id="name-input" name="name" required>
-        <label for="phone-input">电话</label>
-        <input type="tel" id="phone-input" name="phone" required>
-        <label for="email-input">邮箱</label>
-        <input type="email" id="email-input" name="email">
-        <button type="submit">添加</button>
+        <label>姓名 <input type="text" id="add-name" required></label>
+
+        <label>联系方式列表</label>
+        <div id="add-details-container">
+        </div>
+        <button type="button" class="outline secondary" onclick="addDetailRow('add-details-container')" style="margin-bottom: 1rem; width: 100%; font-size: 0.9rem;">+ 添加一行 (电话/邮箱/地址)</button>
+
+        <button type="submit">保存</button>
       </form>
     </article>
   </dialog>
@@ -174,13 +141,14 @@
         <strong>修改联系人</strong>
       </header>
       <form id="edit-contact-form">
-        <input type="hidden" id="edit-id-input">
-        <label for="edit-name-input">姓名</label>
-        <input type="text" id="edit-name-input" required>
-        <label for="edit-phone-input">电话</label>
-        <input type="tel" id="edit-phone-input" required>
-        <label for="edit-email-input">邮箱</label>
-        <input type="email" id="edit-email-input" name="email">
+        <input type="hidden" id="edit-id">
+        <label>姓名 <input type="text" id="edit-name" required></label>
+
+        <label>联系方式列表</label>
+        <div id="edit-details-container">
+        </div>
+        <button type="button" class="outline secondary" onclick="addDetailRow('edit-details-container')" style="margin-bottom: 1rem; width: 100%; font-size: 0.9rem;">+ 添加一行</button>
+
         <footer>
           <button type="button" class="secondary" onclick="hideEditForm()">取消</button>
           <button type="submit">保存更改</button>
@@ -196,4 +164,3 @@
 
 </body>
 </html>
-

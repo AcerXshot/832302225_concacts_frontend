@@ -1,84 +1,57 @@
-//* global pinyinPro */ //
+/* global pinyinPro */
 
-
-const API_BASE_URL = 'https://eight32302225-backend.onrender.com/api';
-const CONTACTS_PER_PAGE = 6;
+// 注意：这里改为本地地址，因为你的 Python 后端是在本地运行的
+const API_BASE_URL = 'http://127.0.0.1:5000/api';
+const CONTACTS_PER_PAGE = 8;
 let allContacts = [];
 let currentPage = 1;
 let selectedContact = null;
 
-// --- 获取页面元素 ---
-const searchInput = document.getElementById('search-input');
-const contactsListDiv = document.getElementById('contacts-list');
-const pageInfo = document.getElementById('page-info');
-const prevPageBtn = document.getElementById('prev-page');
-const nextPageBtn = document.getElementById('next-page');
-
-// 添加模态框
-const addModal = document.getElementById('add-modal');
-const addContactForm = document.getElementById('add-contact-form');
-const nameInput = document.getElementById('name-input');
-const phoneInput = document.getElementById('phone-input');
-const emailInput = document.getElementById('email-input'); // (新增)
-
-// 修改模态框
-const editModal = document.getElementById('edit-modal');
-const editContactForm = document.getElementById('edit-contact-form');
-const editIdInput = document.getElementById('edit-id-input');
-const editNameInput = document.getElementById('edit-name-input');
-const editPhoneInput = document.getElementById('edit-phone-input');
-const editEmailInput = document.getElementById('edit-email-input'); // (新增)
-
-// 详情模态框
-const detailModal = document.getElementById('detail-modal');
-const detailName = document.getElementById('detail-name');
-const detailPhone = document.getElementById('detail-phone');
-const detailEmail = document.getElementById('detail-email'); // (新增)
-const detailEditBtn = document.getElementById('detail-edit-btn');
-const detailDeleteBtn = document.getElementById('detail-delete-btn');
-
-
+// --- 1. 获取与渲染 ---
 
 async function fetchDataAndRender() {
   try {
     const response = await fetch(`${API_BASE_URL}/contacts`);
+    if (!response.ok) throw new Error("API Error");
     allContacts = await response.json();
     currentPage = 1;
-    updateSearchPlaceholder(); // 2. (已修改) 更新搜索框占位符
     renderPage();
   } catch (error) {
     console.error('获取联系人失败:', error);
-    contactsListDiv.innerHTML = '<p>加载数据失败，请检查网络连接。</p>';
+    document.getElementById('contacts-list').innerHTML =
+      '<article style="color: coral;">无法连接后端服务器，请确认 app.py 已运行。</article>';
   }
 }
 
-
 function renderPage() {
-  const searchTerm = searchInput.value.toLowerCase();
-  const filteredContacts = allContacts.filter(contact =>
-    contact.name.toLowerCase().includes(searchTerm) ||
-    contact.phone.includes(searchTerm) ||
-    (contact.email && contact.email.toLowerCase().includes(searchTerm)) // (新增) 搜索 email
-  );
+  const searchTerm = document.getElementById('search-input').value.toLowerCase();
 
+  // 过滤逻辑：搜索姓名或任意联系方式的值
+  const filteredContacts = allContacts.filter(contact => {
+    const nameMatch = contact.name.toLowerCase().includes(searchTerm);
+    // 在 details 数组中查找是否有匹配项
+    const detailsMatch = contact.details && contact.details.some(d => d.value.toLowerCase().includes(searchTerm));
+    return nameMatch || detailsMatch;
+  });
+
+  // 排序逻辑：收藏者优先 (is_favorite=1)，其次按拼音
   filteredContacts.sort((a, b) => {
+    if (a.is_favorite !== b.is_favorite) {
+      return b.is_favorite - a.is_favorite; // 1 在前，0 在后
+    }
     return pinyinPro.pinyin(a.name, { toneType: 'none' }).localeCompare(pinyinPro.pinyin(b.name, { toneType: 'none' }));
   });
 
+  // 分页
   const startIndex = (currentPage - 1) * CONTACTS_PER_PAGE;
-  const endIndex = startIndex + CONTACTS_PER_PAGE;
-  const paginatedContacts = filteredContacts.slice(startIndex, endIndex);
+  const paginatedContacts = filteredContacts.slice(startIndex, startIndex + CONTACTS_PER_PAGE);
 
-  const groupedContacts = groupContacts(paginatedContacts);
-  renderGroupedContacts(groupedContacts);
+  renderGroupedContacts(groupContacts(paginatedContacts));
   updatePaginationControls(filteredContacts.length);
 }
 
-
-
-// 分组
+// 分组逻辑 (按首字母)
 function groupContacts(contacts) {
-  if (contacts.length === 0) return {};
   const groups = {};
   contacts.forEach(contact => {
     let firstLetter = pinyinPro.pinyin(contact.name, { pattern: 'first', toneType: 'none' }).toUpperCase();
@@ -89,160 +62,262 @@ function groupContacts(contacts) {
   return groups;
 }
 
-// 渲染分组
+// 渲染列表
 function renderGroupedContacts(groupedContacts) {
-  contactsListDiv.innerHTML = '';
-  const groupKeys = Object.keys(groupedContacts).sort((a, b) => {
-    if (a === '#') return 1;
-    if (b === '#') return -1;
-    return a.localeCompare(b);
-  });
+  const listDiv = document.getElementById('contacts-list');
+  listDiv.innerHTML = '';
 
+  const groupKeys = Object.keys(groupedContacts).sort();
   if (groupKeys.length === 0) {
-    contactsListDiv.innerHTML = '<p style="text-align: center; margin-top: 2rem;">没有找到符合条件的联系人。</p>';
+    listDiv.innerHTML = '<p style="text-align:center; color:#666;">暂无联系人</p>';
     return;
   }
 
   groupKeys.forEach(key => {
-    const header = document.createElement('h3');
+    // 组标题
+    const header = document.createElement('div');
     header.className = 'list-group-header';
     header.textContent = key;
-    contactsListDiv.appendChild(header);
+    listDiv.appendChild(header);
 
+    // 联系人行
     groupedContacts[key].forEach(contact => {
-      const contactItem = document.createElement('div');
-      contactItem.className = 'contact-item';
-      contactItem.textContent = contact.name;
-      contactItem.dataset.id = contact.id;
-      contactsListDiv.appendChild(contactItem);
+      const item = document.createElement('div');
+      item.className = 'contact-item';
+
+      // 星星图标样式 (实心/空心)
+      const starClass = contact.is_favorite ? 'star-btn active' : 'star-btn';
+      const starFill = contact.is_favorite ? 'currentColor' : 'none';
+
+      item.innerHTML = `
+        <div class="contact-info" onclick="openDetail(${contact.id})">
+          <strong>${contact.name}</strong>
+          <small style="color: #888; margin-left: 0.5rem;">${contact.phone || '无电话'}</small>
+        </div>
+        <button class="icon-btn ${starClass}" onclick="toggleFavorite(event, ${contact.id}, ${contact.is_favorite})">
+          <svg fill="${starFill}"><use href="#icon-star"></use></svg>
+        </button>
+      `;
+      listDiv.appendChild(item);
     });
   });
 }
 
-// 更新分页
 function updatePaginationControls(totalItems) {
   const totalPages = Math.ceil(totalItems / CONTACTS_PER_PAGE) || 1;
-  pageInfo.textContent = `第 ${currentPage} / ${totalPages} 页`;
-  prevPageBtn.disabled = currentPage === 1;
-  nextPageBtn.disabled = currentPage >= totalPages;
+  document.getElementById('page-info').textContent = `第 ${currentPage} / ${totalPages} 页`;
+  document.getElementById('prev-page').disabled = currentPage === 1;
+  document.getElementById('next-page').disabled = currentPage >= totalPages;
 }
 
-// 2. 更新搜索框占位符
-function updateSearchPlaceholder() {
-  searchInput.placeholder = `在 ${allContacts.length} 位联系人中搜索...`;
+// --- 2. 交互功能 ---
+
+// 切换收藏状态
+async function toggleFavorite(event, id, currentStatus) {
+  event.stopPropagation(); // 阻止触发点击详情
+  const newStatus = currentStatus ? 0 : 1;
+
+  try {
+    await fetch(`${API_BASE_URL}/contacts/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_favorite: newStatus })
+    });
+    fetchDataAndRender(); // 重新加载以更新排序
+  } catch (err) {
+    alert('操作失败');
+  }
 }
 
+// 导出 Excel
+function exportContacts() {
+  window.location.href = `${API_BASE_URL}/export`;
+}
 
+// 导入 Excel
+document.getElementById('import-file-input').addEventListener('change', async function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
 
-// 添加模态框
-function showAddModal() { addModal.showModal(); }
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/import`, { method: 'POST', body: formData });
+    if (res.ok) {
+      alert('导入成功！');
+      fetchDataAndRender();
+    } else {
+      const data = await res.json();
+      alert('导入失败: ' + (data.error || '未知错误'));
+    }
+  } catch (err) {
+    alert('网络错误');
+  }
+  e.target.value = ''; // 重置 Input
+});
+
+// --- 3. 动态表单辅助函数 ---
+
+// 在指定容器中添加一行输入框
+function addDetailRow(containerId, type = 'Phone', value = '') {
+  const container = document.getElementById(containerId);
+  const row = document.createElement('div');
+  row.className = 'detail-row';
+  row.innerHTML = `
+    <select class="detail-type">
+      <option value="Phone" ${type==='Phone'?'selected':''}>电话</option>
+      <option value="Email" ${type==='Email'?'selected':''}>邮箱</option>
+      <option value="Address" ${type==='Address'?'selected':''}>地址</option>
+      <option value="WeChat" ${type==='WeChat'?'selected':''}>微信</option>
+    </select>
+    <input type="text" class="detail-value" value="${value}" placeholder="输入内容" required>
+    <button type="button" class="remove-btn" onclick="this.parentElement.remove()">删除</button>
+  `;
+  container.appendChild(row);
+}
+
+// 从容器中收集数据
+function getDetailsFromForm(containerId) {
+  const rows = document.querySelectorAll(`#${containerId} .detail-row`);
+  const details = [];
+  rows.forEach(row => {
+    const type = row.querySelector('.detail-type').value;
+    const value = row.querySelector('.detail-value').value;
+    if (value.trim()) {
+      details.push({ type, value });
+    }
+  });
+  return details;
+}
+
+// --- 4. 模态框逻辑 ---
+
+const addModal = document.getElementById('add-modal');
+const editModal = document.getElementById('edit-modal');
+const detailModal = document.getElementById('detail-modal');
+
+// 打开添加框
+function showAddModal() {
+  document.getElementById('add-contact-form').reset();
+  document.getElementById('add-details-container').innerHTML = '';
+  addDetailRow('add-details-container', 'Phone'); // 默认加一行电话
+  addModal.showModal();
+}
 function hideAddModal() { addModal.close(); }
 
-// 修改模态框
-function showEditForm(contact) {
-  selectedContact = contact;
-  editIdInput.value = contact.id;
-  editNameInput.value = contact.name;
-  editPhoneInput.value = contact.phone;
-  editEmailInput.value = contact.email || ''; // (新增)
-  editModal.showModal();
-}
-function hideEditForm() { editModal.close(); }
+// 打开详情框
+function openDetail(id) {
+  selectedContact = allContacts.find(c => c.id === id);
+  if (!selectedContact) return;
 
-// 详情模态框
-function showDetailModal(contact) {
-  selectedContact = contact;
-  detailName.textContent = contact.name;
-  detailPhone.textContent = contact.phone;
-  detailEmail.textContent = contact.email || '未设置'; // (新增)
+  document.getElementById('detail-name').textContent = selectedContact.name;
+  const contentDiv = document.getElementById('detail-content');
+  contentDiv.innerHTML = '';
+
+  // 渲染所有详情
+  if (selectedContact.details && selectedContact.details.length > 0) {
+    selectedContact.details.forEach(d => {
+      contentDiv.innerHTML += `<p><strong>${d.method_type}:</strong> ${d.value}</p>`;
+    });
+  } else {
+    contentDiv.innerHTML = '<p>暂无详细信息</p>';
+  }
+
   detailModal.showModal();
 }
 function hideDetailModal() { detailModal.close(); }
 
+// 打开修改框
+document.getElementById('detail-edit-btn').addEventListener('click', () => {
+  hideDetailModal();
+  document.getElementById('edit-id').value = selectedContact.id;
+  document.getElementById('edit-name').value = selectedContact.name;
 
+  const container = document.getElementById('edit-details-container');
+  container.innerHTML = '';
 
-document.addEventListener('DOMContentLoaded', fetchDataAndRender);
-searchInput.addEventListener('input', () => {
-  currentPage = 1;
-  renderPage();
-});
-prevPageBtn.addEventListener('click', () => {
-  if (currentPage > 1) { currentPage--; renderPage(); }
-});
-nextPageBtn.addEventListener('click', () => {
-  const totalItems = allContacts.filter(c => c.name.toLowerCase().includes(searchInput.value.toLowerCase()) || c.phone.includes(searchInput.value)).length;
-  const totalPages = Math.ceil(totalItems / CONTACTS_PER_PAGE) || 1;
-  if (currentPage < totalPages) { currentPage++; renderPage(); }
-});
+  // 填充现有数据
+  if (selectedContact.details) {
+    selectedContact.details.forEach(d => {
+      addDetailRow('edit-details-container', d.method_type, d.value);
+    });
+  }
+  if (container.children.length === 0) {
+    addDetailRow('edit-details-container'); // 如果空的，加一行默认
+  }
 
-// 列表项点击
-contactsListDiv.addEventListener('click', (event) => {
-  const target = event.target;
-  if (target.classList.contains('contact-item')) {
-    const contactId = target.dataset.id;
-    const contact = allContacts.find(c => c.id === Number(contactId));
-    if (contact) { showDetailModal(contact); }
+  editModal.showModal();
+});
+function hideEditForm() { editModal.close(); }
+
+// 删除逻辑
+document.getElementById('detail-delete-btn').addEventListener('click', async () => {
+  if (confirm(`确定删除 ${selectedContact.name} 吗？`)) {
+    await fetch(`${API_BASE_URL}/contacts/${selectedContact.id}`, { method: 'DELETE' });
+    hideDetailModal();
+    fetchDataAndRender();
   }
 });
 
-// 详情模态框按钮
-detailEditBtn.addEventListener('click', () => {
-  hideDetailModal();
-  showEditForm(selectedContact);
-});
-detailDeleteBtn.addEventListener('click', () => {
-  hideDetailModal();
-  deleteContact(selectedContact.id);
-});
+// --- 5. 表单提交 ---
 
-// 添加表单提交
-addContactForm.addEventListener('submit', event => {
-  event.preventDefault();
-  fetch(`${API_BASE_URL}/contacts`, {
+// 添加提交
+document.getElementById('add-contact-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const name = document.getElementById('add-name').value;
+  const details = getDetailsFromForm('add-details-container');
+
+  const res = await fetch(`${API_BASE_URL}/contacts`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name: nameInput.value,
-      phone: phoneInput.value,
-      email: emailInput.value // (新增)
-    })
-  }).then(response => {
-    if (response.ok) {
-      hideAddModal();
-      addContactForm.reset();
-      fetchDataAndRender();
-    } else { alert('添加失败'); }
+    body: JSON.stringify({ name, details })
   });
+
+  if (res.ok) {
+    hideAddModal();
+    fetchDataAndRender();
+  } else {
+    alert('添加失败');
+  }
 });
 
-// 修改表单提交
-editContactForm.addEventListener('submit', event => {
-  event.preventDefault();
-  const id = editIdInput.value;
-  const updatedContact = {
-    name: editNameInput.value,
-    phone: editPhoneInput.value,
-    email: editEmailInput.value // (新增)
-  };
-  fetch(`${API_BASE_URL}/contacts/${id}`, {
+// 修改提交
+document.getElementById('edit-contact-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const id = document.getElementById('edit-id').value;
+  const name = document.getElementById('edit-name').value;
+  const details = getDetailsFromForm('edit-details-container');
+
+  const res = await fetch(`${API_BASE_URL}/contacts/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(updatedContact)
-  }).then(response => {
-    if (response.ok) {
-      hideEditForm();
-      fetchDataAndRender();
-    } else { alert('修改失败'); }
+    body: JSON.stringify({ name, details }) // is_favorite 保持不变，PUT 会部分更新吗？后端逻辑是覆盖更新。
+    // 注意：我的后端代码逻辑中 PUT 如果不传 is_favorite 就不更新它，所以这里只传 name 和 details 是安全的。
   });
+
+  if (res.ok) {
+    hideEditForm();
+    fetchDataAndRender();
+  } else {
+    alert('修改失败');
+  }
 });
 
-// 删除函数
-function deleteContact(id) {
-  if (!confirm(`您确定要删除 ${selectedContact.name} 吗？`)) return;
-  fetch(`${API_BASE_URL}/contacts/${id}`, { method: 'DELETE' })
-    .then(response => {
-      if (response.ok) { fetchDataAndRender(); }
-      else { alert('删除失败'); }
-    });
-}
+// 初始化
+document.addEventListener('DOMContentLoaded', fetchDataAndRender);
+
+// 搜索监听
+document.getElementById('search-input').addEventListener('input', () => {
+  currentPage = 1;
+  renderPage();
+});
+// 翻页监听
+document.getElementById('prev-page').addEventListener('click', () => {
+  if (currentPage > 1) { currentPage--; renderPage(); }
+});
+document.getElementById('next-page').addEventListener('click', () => {
+  const totalPages = Math.ceil(allContacts.length / CONTACTS_PER_PAGE);
+  if (currentPage < totalPages) { currentPage++; renderPage(); }
+});
 
