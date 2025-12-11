@@ -15,6 +15,7 @@ async function fetchDataAndRender() {
     const response = await fetch(`${API_BASE_URL}/contacts`);
     if (!response.ok) throw new Error("API Error");
     allContacts = await response.json();
+    updateSearchPlaceholder();
     currentPage = 1;
     renderPage();
   } catch (error) {
@@ -58,6 +59,15 @@ function renderPage() {
 
   renderGroupedContacts(groupContacts(paginatedContacts));
   updatePaginationControls(filteredContacts.length);
+}
+
+// --- 新增：更新搜索框占位符 ---
+function updateSearchPlaceholder() {
+  const count = allContacts.length;
+  const searchInput = document.getElementById('search-input');
+  if (searchInput) {
+    searchInput.placeholder = `在 ${count} 位联系人中搜索...`;
+  }
 }
 
 // 分组逻辑 (按首字母)

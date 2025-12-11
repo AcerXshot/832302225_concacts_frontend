@@ -8,47 +8,76 @@
 
   <style>
     :root { --pico-background-color: #11191f; }
-    /* 布局调整 */
-    .app-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; gap: 1rem;}
+
+    /* 顶部布局 */
+    .app-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; margin-bottom: 2rem; }
     .header-actions { display: flex; gap: 0.5rem; }
 
-    /* 图标按钮样式 */
+    /* 极简图标按钮 */
     .icon-btn {
       background: transparent !important; border: none !important;
-      padding: 0.5rem !important; margin: 0 !important;
-      width: 44px; height: 44px;
-      color: var(--pico-primary);
-      cursor: pointer;
+      padding: 0.5rem !important; width: 40px; height: 40px;
+      color: var(--pico-primary); display: flex; align-items: center; justify-content: center;
     }
-    .icon-btn svg { width: 24px; height: 24px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .icon-btn svg { width: 24px; height: 24px; stroke: currentColor; stroke-width: 2; fill: none; }
+
+    /* --- 重点修改：搜索栏容器 --- */
+    .search-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem; /* 搜索框和星星的间距 */
+      margin-bottom: 2rem;
+    }
+
+    /* 搜索输入框：撑满剩余空间 */
+    .search-wrapper input[type="search"] {
+      margin-bottom: 0; /* 去掉默认下边距 */
+      height: 40px;     /* 强制高度 */
+      border-radius: 20px; /* 圆角效果，像你的图片一样 */
+    }
+
+    /* 收藏星星按钮：高度一致，宽度调小 */
+    #toggle-fav-btn {
+      width: 40px;       /* 宽度调小，正方形 */
+      height: 40px;      /* 高度与搜索框一致 */
+      padding: 0;        /* 去掉内边距 */
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%; /* 圆形或者改成 4px 方形 */
+      flex-shrink: 0;    /* 防止被压缩 */
+    }
+    #toggle-fav-btn svg { width: 20px; height: 20px; }
+
+    /* --- 重点修改：分页栏 --- */
+    .pagination-container {
+      display: flex;
+      justify-content: space-between; /* 关键：一个最左，一个最右 */
+      align-items: center;
+      margin-top: 3rem;
+      width: 100%;
+    }
+
+    /* 分页按钮：调小 */
+    .pagination-btn {
+      padding: 0.25rem 1rem !important; /* 减小内边距 */
+      font-size: 0.85rem !important;    /* 减小字号 */
+      width: auto !important;           /* 宽度自适应 */
+      height: 32px;                     /* 固定高度 */
+      line-height: 1;
+      background-color: transparent;
+      border: 1px solid var(--pico-primary);
+    }
+
+    /* 页码文字 */
+    #page-info { color: #888; font-size: 0.9rem; }
+
+    /* 列表样式保持不变... */
+    .list-group-header { color: #888; margin-top: 1rem; font-size: 0.9rem; padding-left: 0.5rem; }
+    .contact-item { padding: 1rem 0.5rem; border-bottom: 1px solid #2d3748; display: flex; justify-content: space-between; align-items: center; }
+    .contact-item:hover { background-color: #1a202c; }
 
     /* 收藏星星样式 */
-    .star-btn { color: #555; transition: color 0.2s; z-index: 10; }
-    .star-btn.active { color: #f6ad55; fill: #f6ad55; } /* 金色实心 */
-    .star-btn:hover { transform: scale(1.1); }
-
-    /* 列表项样式 */
-    .contact-item {
-      display: flex; justify-content: space-between; align-items: center;
-      font-size: 1.1rem; padding: 1rem;
-      border-bottom: 1px solid var(--pico-muted-border-color);
-      cursor: pointer; transition: background-color 0.2s ease;
-    }
-    .contact-item:hover { background-color: #192229; }
-    .contact-info { flex-grow: 1; }
-
-    /* 动态表单行样式 */
-    .detail-row { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; align-items: center; }
-    .detail-row select { width: 100px; margin-bottom: 0; }
-    .detail-row input { margin-bottom: 0; flex-grow: 1; }
-    .detail-row .remove-btn { width: auto; padding: 0.2rem 0.5rem; background: var(--pico-form-invalid-border-color); border: none; font-size: 0.8rem; }
-
-    /* 分组标题 */
-    .list-group-header {
-      font-size: 1rem; font-weight: bold; color: var(--pico-primary);
-      background-color: #192229; padding: 0.25rem 1rem;
-      margin-top: 0.5rem; border-radius: 4px;
-    }
+    .star-btn { color: #555; transition: color 0.2s; border:none; background:transparent; }
+    .star-btn.active { color: #f6ad55; fill: #f6ad55; }
   </style>
 </head>
 <body style="padding-bottom: 5rem;">
@@ -84,22 +113,22 @@
     </div>
   </header>
 
-  <div>
-    <div style="display: flex; gap: 0.5rem; align-items: center;">
-    <input type="search" id="search-input" name="search" placeholder="搜索联系人..." style="margin-bottom: 0;">
+  <div class="search-wrapper">
+    <input type="search" id="search-input" name="search" placeholder="在联系人中搜索..." style="flex-grow: 1;">
 
-    <button id="toggle-fav-btn" class="outline" data-tooltip="只看收藏" style="width: auto; padding: 0.7rem;">
-      <svg style="pointer-events: none;"><use href="#icon-star"></use></svg>
+    <button id="toggle-fav-btn" class="outline" data-tooltip="只看收藏">
+      <svg><use href="#icon-star"></use></svg>
     </button>
-  </div>
   </div>
 
   <div id="contacts-list" style="margin-top: 1rem;"></div>
 
-  <div id="pagination-controls" style="display: flex; justify-content: space-between; margin-top: 2rem;">
-    <button id="prev-page" class="outline">上一页</button>
-    <span id="page-info" style="line-height: 3;">第 1 / 1 页</span>
-    <button id="next-page" class="outline">下一页</button>
+  <div class="pagination-container" id="pagination-controls">
+    <button id="prev-page" class="pagination-btn outline">上一页</button>
+
+    <span id="page-info">第 1 / 1 页</span>
+
+    <button id="next-page" class="pagination-btn outline">下一页</button>
   </div>
 
   <dialog id="detail-modal">
