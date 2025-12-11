@@ -13,6 +13,10 @@
     .app-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; margin-bottom: 2rem; }
     .header-actions { display: flex; gap: 0.5rem; }
 
+    /* 修复 hgroup 问题：改为自定义类 */
+    .title-group h2 { margin-bottom: 0; line-height: 1.2; }
+    .title-group small { color: #888; font-size: 0.8em; }
+
     /* 极简图标按钮 */
     .icon-btn {
       background: transparent !important; border: none !important;
@@ -22,7 +26,7 @@
     }
     .icon-btn svg { width: 24px; height: 24px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 
-    /* 收藏星星按钮：高度一致，宽度调小 */
+    /* 收藏星星按钮 */
     #toggle-fav-btn {
       width: 40px;
       height: 40px;
@@ -63,7 +67,7 @@
       margin-top: 0.5rem; border-radius: 4px;
     }
 
-    /* --- 重点修改：搜索栏容器 --- */
+    /* 搜索栏容器 */
     .search-wrapper {
       display: flex;
       align-items: center;
@@ -78,7 +82,7 @@
       border-radius: 20px;
     }
 
-    /* --- 重点修改：分页栏 --- */
+    /* 分页栏 */
     .pagination-container {
       display: flex;
       justify-content: space-between;
@@ -117,10 +121,10 @@
 <main class="container">
 
   <header class="app-header">
-    <hgroup>
+    <div class="title-group">
       <h2>通讯录</h2>
       <small>Extreme Programming Project</small>
-    </hgroup>
+    </div>
     <div class="header-actions">
       <input type="file" id="import-file-input" accept=".xlsx, .xls" style="display: none;">
 
@@ -155,12 +159,12 @@
   <dialog id="detail-modal">
     <article>
       <header>
+        <h4 style="margin:0; font-size:1.1rem;">联系人详情</h4>
         <button aria-label="Close" class="close" onclick="hideDetailModal()"></button>
-        <strong id="detail-name-header">联系人详情</strong>
       </header>
       <div style="text-align: center; margin-bottom: 1rem;">
         <svg style="width: 60px; height: 60px; background: #333; padding: 10px; border-radius: 50%; fill: none; stroke: #fff;"><use href="#icon-user"></use></svg>
-        <h3 id="detail-name" style="margin-top:0.5rem;"></h3>
+        <h3 id="detail-name" style="margin-top:0.5rem;">&nbsp;</h3>
       </div>
       <div id="detail-content" style="margin-bottom: 2rem;"></div>
 
@@ -174,8 +178,8 @@
   <dialog id="add-modal">
     <article>
       <header>
+        <h4 style="margin:0; font-size:1.1rem;">添加新联系人</h4>
         <button aria-label="Close" class="close" onclick="hideAddModal()"></button>
-        <strong>添加新联系人</strong>
       </header>
       <form id="add-contact-form">
         <label>姓名 <input type="text" id="add-name" required></label>
@@ -193,8 +197,8 @@
   <dialog id="edit-modal">
     <article>
       <header>
+        <h4 style="margin:0; font-size:1.1rem;">修改联系人</h4>
         <button aria-label="Close" class="close" onclick="hideEditForm()"></button>
-        <strong>修改联系人</strong>
       </header>
       <form id="edit-contact-form">
         <input type="hidden" id="edit-id">
